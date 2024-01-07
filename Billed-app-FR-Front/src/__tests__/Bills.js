@@ -10,6 +10,7 @@ import mockStore from "../__mocks__/store";
 
 import router from "../app/Router.js";
 jest.mock("../app/Store", () => mockStore);
+
 //Étant donné que je suis connecté en tant qu'employé
 describe("Given I am connected as an employee", () => {
   //Quand je suis sur la page Bills(factures)
@@ -71,28 +72,73 @@ describe("Given I am connected as an employee", () => {
       expect(modale).toBeTruthy();
     });
   });
-   // test action et affichage modale quand clic icône oeil bleu 
-   describe("When I click on the blue eye icon", () => {
+  // test action et affichage modale quand clic icône oeil bleu
+  describe("When I click on the blue eye icon", () => {
     test("Then modal should be displayed with its content", async () => {
-      sessionStorageMock("Employee")
+      sessionStorageMock("Employee");
       document.body.innerHTML = '<div id="root"></div>';
-      router()
-      window.onNavigate(ROUTES_PATH.Bills)
-      const onNavigate = (pathname) => { document.body.innerHTML=ROUTES({pathname})}
-    $.fn.modal=jest.fn(function() {this[0].classList.add('show')})
-    const billsList = new Bills({document, onNavigate,store:mockStore,localStorage:null})
-    const bills = await billsList.getBills()
-    document.body.innerHTML=BillsUI({data: bills})
-    const firstEye = screen.getAllByTestId("icon-eye").shift()
-    const handleClickIconEye = jest.fn(()=>billsList.handleClickIconEye(firstEye)) 
-    firstEye.addEventListener("click",handleClickIconEye)
-    userEvent.click(firstEye)
-    // vérification de l'appel de la fonction handleClickIconEye 
-    expect(handleClickIconEye).toBeCalled() 
-     //vérification de l'affichage de la modale par la présence de la classe .show 
-      expect(document.querySelector(".show")).toBeTruthy()
+      router();
+      window.onNavigate(ROUTES_PATH.Bills);
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+      $.fn.modal = jest.fn(function () {
+        this[0].classList.add("show");
+      });
+      const billsList = new Bills({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: null,
+      });
+      const bills = await billsList.getBills();
+      document.body.innerHTML = BillsUI({ data: bills });
+      const firstEye = screen.getAllByTestId("icon-eye").shift();
+      const handleClickIconEye = jest.fn(() =>
+        billsList.handleClickIconEye(firstEye)
+      );
+      firstEye.addEventListener("click", handleClickIconEye);
+      userEvent.click(firstEye);
+      // vérification de l'appel de la fonction handleClickIconEye
+      expect(handleClickIconEye).toBeCalled();
+      //vérification de l'affichage de la modale par la présence de la classe .show
+      expect(document.querySelector(".show")).toBeTruthy();
     });
-
-   });
   });
+  // Test entrée avec paramètre de la page Note de frais
+  describe("When I enter on Bills Page with parameter", () => {
+    // test avec paramètre chargement
+    test("Then it calls the LoadingPage function", () => {
+      document.body.innerHTML = BillsUI({ loading: true });
+      expect(screen.getAllByText("Loading...")).toBeTruthy();
+    });
+    // test avec paramètre erreur
+    test("Then it calls the ErrorPage function", () => {
+      document.body.innerHTML = BillsUI({ error: "C'est une erreur" });
+      expect(screen.getAllByText("C'est une erreur")).toBeTruthy();
+    });
+  });
+  //test  integration GET//
+
+  test("Then it should display the spawn notes", async () => {
+    sessionStorageMock("Employee");
+    document.body.innerHTML = '<div id="root"></div>';
+    router();
+    window.onNavigate(ROUTES_PATH.Bills);
+    const onNavigate = (pathname) => {
+      document.body.innerHTML = ROUTES({ pathname });
+    };
+    const billsList = new Bills({
+      document,
+      onNavigate,
+      store: mockStore,
+      localStorage: null,
+    });
+    const bills = await billsList.getBills();
+    document.body.innerHTML = BillsUI({ data: bills });
+    const billsCount =  screen.getByTestId('tbody').childElementCount;
+    //verification que les 4 bill du mock sont récupérées
+    expect(billsCount).toEqual(4);
+  });
+});
 
