@@ -1,4 +1,5 @@
 import { screen, waitFor, fireEvent } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import BillsUI from "../views/BillsUI.js";
 import Bills from "../containers/Bills.js";
 import { bills } from "../fixtures/bills.js";
@@ -49,33 +50,24 @@ describe("Given I am connected as an employee", () => {
     const datesSorted = [...dates].sort(antiChrono);
     expect(dates).toEqual(datesSorted);
   });
-  describe("Given the bills container is initialized", () => {
-    test("When clicking on the new bill button, i go to the form bill", () => {
-      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-      window.localStorage.setItem('user', JSON.stringify({
-        type: 'Employee'
-      }))
-      document.body.innerHTML = BillsUI({ data: bills })
 
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname })
-      }
-
-      const store = null
-      const billsContainer = new Bills({
-        document, onNavigate, store, bills, localStorage: window.localStorage
-      })
-
-      const newBillButton = screen.getByTestId("btn-new-bill")
-      const handleClickNewBill = jest.fn(() => billsContainer.handleClickNewBill())
-
-      newBillButton.addEventListener("click", handleClickNewBill)
-      fireEvent.click(newBillButton)
-
-      expect(handleClickNewBill).toHaveBeenCalled()
-
-      const formNewBill = screen.queryByTestId("form-new-bill")
-      expect(formNewBill).toBeTruthy()
-    });
-  });
+ /* action et affichage modale quand clic bouton "nouvelle note de frais" */
+ describe("When I click on new bill button ", () => {
+  test("Then a modal should open", () => {
+    sessionStorageMock('Employee')
+    document.body.innerHTML = BillsUI({data: bills,});
+    const onNavigate = (pathname) => {document.body.innerHTML = ROUTES({ pathname, }); };
+    const newBill = new Bills({ document, onNavigate, store: null, bills, localStorage: localStorageMock})          
+    const handleClickNewBill = jest.fn((e) => newBill.handleClickNewBill(e, bills)) 
+    const iconNewBill = screen.getByTestId("btn-new-bill");
+    iconNewBill.addEventListener("click", handleClickNewBill);
+    fireEvent.click(iconNewBill);
+    /* vérification de l'appel de la fonction handleClickNewBill */
+    expect(handleClickNewBill).toHaveBeenCalled();
+     /* vérification de l'affichage de la modale par la présence du noeud DOM
+     id="form-new-bill") */
+    const modale = screen.getAllByTestId("form-new-bill");
+    expect(modale).toBeTruthy();
+  })
+});
 });
