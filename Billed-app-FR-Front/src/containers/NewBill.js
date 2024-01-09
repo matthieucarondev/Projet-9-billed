@@ -19,24 +19,21 @@ export default class NewBill {
     e.preventDefault()
     const fileInput = this.document.querySelector(`input[data-testid="file"]`)
     const file = fileInput.files[0]
-
-    // Check file extension
-    const allowedExtensions = ['jpg', 'jpeg', 'png']
-    const fileExtension = file.name.split('.').pop().toLowerCase()
-
-    if (!allowedExtensions.includes(fileExtension)) {
-      alert('Please select a file with a valid extension (jpg, jpeg, or png).')
-      // Clear the file input
-      fileInput.value = ''
-      return
-    }
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1]
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
-
+    //récupérer l'extension du fichier en minuscule
+    const fileExtension = fileName.split('.')[fileName.split(".").length-1].toLowerCase()
+    if (fileExtension==="jpg" || fileExtension==="jpeg"|| fileExtension==="png") {
+      this.document.querySelector(".error-msg").classList.remove("visible")
+    } else {
+      this.document.querySelector(".error-msg").classList.add("visible")
+      fileInput.value = ''
+      return
+    }
     this.store
       .bills()
       .create({
@@ -50,12 +47,12 @@ export default class NewBill {
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
-         // Display the image in the modal (assuming you have a modal with an ID of 'imageModal')
+         // Affichez l’image dans la fenêtre modale (en supposant que vous ayez une fenêtre modale avec l’ID 'imageModal')
          const imageModal = this.document.getElementById('imageModal')
          if (imageModal) {
            const modalImage = imageModal.querySelector('.modal-image')
            modalImage.src = fileUrl
-           // You may need to handle modal display based on your modal implementation
+           // Vous devrez peut-être gérer l’affichage modal en fonction de votre implémentation modale
          }
       }).catch(error => console.error(error))
   }
