@@ -143,20 +143,22 @@ describe("Given I am connected as an employee", () => {
 });
 /* test d'intégration POST */
 describe("When an error occurs on API", () => {
-  //tet  erreur 500
+  beforeEach(() => {
+  jest.spyOn(mockStore, "bills");
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  sessionStorageMock("Employee");
+  document.body.innerHTML = '<div id="root"></div>';
+  })
+  //test  erreur 500
   test("fetches error from an API and fails with 500 error", async () => {
-    jest.spyOn(mockStore, "bills");
-    jest.spyOn(console, "error").mockImplementation(() => {});
-    sessionStorageMock("Employee");
-    document.body.innerHTML = '<div id="root"></div>';
     router();
     const onNavigate = (pathname) => {
       document.body.innerHTML = ROUTES({ pathname });
     };
-    mockStore.bills.mockImplementation(() => {
+    mockStore.bills.mockImplementationOnce(() => {
       return {
         update: () => {
-          return Promise.reject(new Error("erreur 500"));
+          return Promise.reject(new Error("Erreur 500"));
         },
       };
     });
@@ -166,21 +168,17 @@ describe("When an error occurs on API", () => {
       store: mockStore,
       localStorage: window.localStorage,
     });
-    //envoi formulaire
-    const form = screen.getByTestId("form-new-bill");
+    // envoie du formulaire
     const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
-    form.addEventListener("submit", handleSubmit)
+      const form = screen.getByTestId("form-new-bill");
+      form.addEventListener("submit", handleSubmit);
     userEvent.click(screen.getByTestId("btn-send-bill"));
     await new Promise(process.nextTick);
-    //vérifié que la console est appellé
+    //  Vérification que console.error est appelé
     expect(console.error).toHaveBeenCalled();
   });
   test("fetches error from an API and fails with 404 error", async () => {
-    jest.spyOn(mockStore, "bills");
-    jest.spyOn(console, "error").mockImplementation(() => {});
-    sessionStorageMock("Employee");
-    document.body.innerHTML = '<div id="root"></div>';
-    mockStore.bills.mockImplementation(() => {
+    mockStore.bills.mockImplementationOnce(() => {
       return {
         list: () => {
           return Promise.reject(new Error("erreur 404"));
