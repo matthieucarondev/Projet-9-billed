@@ -6,9 +6,9 @@ import { screen, waitFor, fireEvent } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
+import BillsUI from "../views/BillsUI";
 import mockStore from "../__mocks__/store.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes";
-import { localStorageMock } from "../__mocks__/localStorage.js";
 import router from "../app/Router.js";
 import { sessionStorageMock } from "../__mocks__/sessionStorage.js";
 
@@ -131,7 +131,7 @@ describe("Given I am connected as an employee", () => {
       const form = screen.getByTestId("form-new-bill");
       form.addEventListener("submit", handleSubmit);
       // Simulé le click
-      userEvent.click(screen.getByTestId('btn-send-bill'));
+      userEvent.click(screen.getByTestId("btn-send-bill"));
       //vérifié l'appel de fonction handleSubmit
       expect(handleSubmit).toHaveBeenCalled();
       // vérifie l'appel de la méthode updateBill
@@ -139,5 +139,58 @@ describe("Given I am connected as an employee", () => {
       //vérifié le renvoi vers les note de frai
       expect(screen.getByText("Mes notes de frais")).toBeTruthy();
     });
+  });
+});
+/* test d'intégration POST */
+describe("When an error occurs on API", () => {
+  //tet  erreur 500
+  test("fetches error from an API and fails with 500 error", async () => {
+    jest.spyOn(mockStore, "bills");
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    sessionStorageMock("Employee");
+    document.body.innerHTML = '<div id="root"></div>';
+    router();
+    const onNavigate = (pathname) => {
+      document.body.innerHTML = ROUTES({ pathname });
+    };
+    mockStore.bills.mockImplementation(() => {
+      return {
+        update: () => {
+          return Promise.reject(new Error("erreur 500"));
+        },
+      };
+    });
+    const newBill = new NewBill({
+      document,
+      onNavigate,
+      store: mockStore,
+      localStorage: window.localStorage,
+    });
+    //envoi formulaire
+    const form = screen.getByTestId("form-new-bill");
+    const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
+    form.addEventListener("submit", handleSubmit)
+    userEvent.click(screen.getByTestId("btn-send-bill"));
+    await new Promise(process.nextTick);
+    //vérifié que la console est appellé
+    expect(console.error).toHaveBeenCalled();
+  });
+  test("fetches error from an API and fails with 404 error", async () => {
+    jest.spyOn(mockStore, "bills");
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    sessionStorageMock("Employee");
+    document.body.innerHTML = '<div id="root"></div>';
+    mockStore.bills.mockImplementation(() => {
+      return {
+        list: () => {
+          return Promise.reject(new Error("erreur 404"));
+        },
+      };
+    });
+    const html = BillsUI({ error: "Erreur 404" });
+    document.body.innerHTML = html;
+    const message = await screen.getByText(/Erreur 404/);
+    //verifié que le erreur 404 s'affiche
+    expect(message).toBeTruthy();
   });
 });
