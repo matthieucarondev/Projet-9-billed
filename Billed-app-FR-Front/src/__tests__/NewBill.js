@@ -207,7 +207,10 @@ describe("Givent I am connected as an employee", () => {
         mockStore.bills.mockImplementationOnce(() => {
           return {
             update: () => {
-              return Promise.reject(new Error("Erreur 500"));
+              // Simuler une erreur 404 en rejetant la promesse avec une erreur
+              const error = new Error("Erreur 404");
+              error.response = { status: 404 };
+              return Promise.reject(error);
             },
           };
         });
@@ -221,8 +224,11 @@ describe("Givent I am connected as an employee", () => {
         const form = await screen.getByTestId("form-new-bill");
         const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
         form.addEventListener("submit", handleSubmit);
+        // Simuler la soumission du formulaire
         fireEvent.submit(form);
+        // Attendre la prochaine micro-tâche pour que les promesses soient résolues/rejetées
         await new Promise(process.nextTick);
+        // Vérifier que la console.error a été appelée
         expect(console.error).toHaveBeenCalled();
       });
     });
