@@ -10,12 +10,6 @@ import mockStore from "../__mocks__/store.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import router from "../app/Router.js";
 
-/**
- * simulation back-end pour éviter l'erreur
- * Erreur: !!! ReferenceError: fetch is not defined
- * ...
- * .catch((error) => console.error(error)) !!!
- */
 jest.mock("../app/store", () => mockStore);
 
 describe("Given I am connected as an employee", () => {
@@ -37,22 +31,24 @@ describe("Given I am connected as an employee", () => {
       window.onNavigate(ROUTES_PATH.NewBill);
     });
     // Test unitaire: icon-mail
-    test("Then bill icon in vertical layout should be highlighted", async () => {
+    test("Then the invoice icon in the vertical layout should be highlighted and the window icon should not be highlighted.", async () => {
       await screen.findByTestId("icon-window");
       const windowIcon = screen.getByTestId("icon-window");
+       // Vérifier que l'icône de la fenêtre n'a pas la classe "active-icon"
       expect(windowIcon).not.toHaveClass("active-icon");
       await screen.findByTestId("icon-mail");
+       // Vérifier que l'icône de la facture a la classe "active-icon"
       const mailIcon = screen.getByTestId("icon-mail");
       expect(mailIcon).toHaveClass("active-icon");
     });
     // Test Upload Fichier
-    // Tests commenté
     describe("When j'upload un fichier", () => {
       // Test unitaire: format fichier upload
       test("Then la compatatibilité du fichier uploader", () => {
         const onNavigate = (pathname) => {
           document.body.innerHTML = ROUTES({ pathname });
         };
+         // Création d'une instance de NewBill pour les tests
         const newBill = new NewBill({
           document,
           onNavigate,
@@ -69,7 +65,7 @@ describe("Given I am connected as an employee", () => {
         // Fonction testé
         fileUp.addEventListener("change", handleChangeFile);
         fireEvent.change(fileUp, { target: { files: [file] } }); //Simulation de l'input fileUp avec le file de test
-        // Test
+        // Vérification des résultats du test
         expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
         expect(fileUp.files[0]).toStrictEqual(file); //le fichier est bien le meme que file (test.png)
       });
@@ -91,7 +87,7 @@ describe("Given I am connected as an employee", () => {
         const file = new File(["test"], "test.pdf", { type: "image/pdf" });
 
         fileUp.addEventListener("change", (e) => handleChangeFile(e));
-        fireEvent.change(fileUp, { target: { files: [file] } });
+        fireEvent.change(fileUp, { target: { files: [file] } }); //Simulation de l'input fileUp avec le file de test
 
         expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
         expect(errorMessage.classList.contains("visible")).toBeTruthy(); //le message d'erreur est visible
@@ -186,12 +182,15 @@ describe("Givent I am connected as an employee", () => {
       });
       // Test unitaire: Erreur 500
       test("then fetches messages from an API and fails with 500 message error", async () => {
+        // Espionnage de la méthode "bills" de mockStore à nouveau pour ce test spécifique
         jest.spyOn(mockStore, "bills");
+         // Espionnage de la méthode "error" de la console pour éviter les sorties dans les journaux
         jest.spyOn(console, "error").mockImplementation(() => {});
-
+         // Configuration du localStorage avec la valeur du mock dans l'objet window
         Object.defineProperty(window, "localStorage", {
           value: localStorageMock,
         });
+        // Définir une propriété "location" avec une valeur hash correspondant au chemin de la nouvelle facture dans l'objet window
         Object.defineProperty(window, "location", {
           value: { hash: ROUTES_PATH["NewBill"] },
         });
@@ -202,11 +201,11 @@ describe("Givent I am connected as an employee", () => {
         );
         document.body.innerHTML = `<div id="root"></div>`;
         router();
-
+        // Fonction de navigation utilisée dans l'application
         const onNavigate = (pathname) => {
           document.body.innerHTML = ROUTES({ pathname });
         };
-
+        // Configurer la méthode "bills" de mockStore pour simuler une erreur 404
         mockStore.bills.mockImplementationOnce(() => {
           return {
             update: () => {
@@ -217,14 +216,16 @@ describe("Givent I am connected as an employee", () => {
             },
           };
         });
+         // Créer une nouvelle instance de la classe NewBill avec les paramètres nécessaires pour le test
         const newBill = new NewBill({
           document,
           onNavigate,
           store: mockStore,
           localStorage: window.localStorage,
         });
-
+          // Récupérer le formulaire de nouvelle facture à partir du document
         const form = await screen.getByTestId("form-new-bill");
+         // Espionner la méthode "handleSubmit" pour ce test spécifique
         const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
         form.addEventListener("submit", handleSubmit);
         // Simuler la soumission du formulaire
