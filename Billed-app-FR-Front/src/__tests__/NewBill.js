@@ -38,9 +38,12 @@ describe("Given I am connected as an employee", () => {
     });
     // Test unitaire: icon-mail
     test("Then bill icon in vertical layout should be highlighted", async () => {
+      await screen.findByTestId("icon-window");
+      const windowIcon = screen.getByTestId("icon-window");
+      expect(windowIcon).not.toHaveClass("active-icon");
       await screen.findByTestId("icon-mail");
       const mailIcon = screen.getByTestId("icon-mail");
-      expect(mailIcon.classList.contains("active-icon"));
+      expect(mailIcon).toHaveClass("active-icon");
     });
     // Test Upload Fichier
     // Tests commenté
