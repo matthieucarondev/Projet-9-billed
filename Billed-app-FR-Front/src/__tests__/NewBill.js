@@ -190,7 +190,7 @@ describe("Givent I am connected as an employee", () => {
               create: jest.fn().mockRejectedValue(new Error("Erreur 404")),
             };
           });
-          // Attendez-vous à ce que l'appel API génère une erreur 404
+          //On vérifie que l'appel API génère une erreur 404
         await expect(mockedBill().create).rejects.toThrow("Erreur 404");
         // Assertions après l'appel API
         expect(mockedBill).toHaveBeenCalled();
@@ -225,7 +225,7 @@ describe("Givent I am connected as an employee", () => {
               create: jest.fn().mockRejectedValue(new Error("Erreur 500")),
             };
           });
-          // Attendez-vous à ce que l'appel API génère une erreur 500
+          // On verifie  que l'appel API génère une erreur 500
         await expect(mockedBill().create).rejects.toThrow("Erreur 500");
         // Assertions après l'appel API
         expect(mockedBill).toHaveBeenCalled();
