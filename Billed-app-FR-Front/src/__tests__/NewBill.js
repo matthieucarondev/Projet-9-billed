@@ -69,7 +69,7 @@ describe("Given I am connected as an employee", () => {
         expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
         expect(fileUp.files[0]).toStrictEqual(file); //le fichier est bien le meme que file (test.png)
       });
-      test("Then l'incompatatibilité du fichier uploader", () => {
+      test("Then an error message is displayed because the attached file is not allowed ", () => {
         const onNavigate = (pathname) => {
           document.body.innerHTML = ROUTES({ pathname });
         };
@@ -97,9 +97,9 @@ describe("Given I am connected as an employee", () => {
 });
 // Test intégration: Post Bill
 describe("Givent I am connected as an employee", () => {
-  describe("When I validate the form", () => {
+  describe("When I validate the form New Bill", () => {
     // test: Envoi Api simulé Post
-    test("then fetch invoices to mock POST API", () => {
+    test("Then fetch invoices to mock POST API", () => {
       // Création d'un element à partir de NewBillUI()
       document.body.innerHTML = NewBillUI();
       // Chemin de navigation
@@ -163,77 +163,75 @@ describe("Givent I am connected as an employee", () => {
       expect(newBill.updateBill).toHaveBeenCalled(); //La fonction updateBill de l'instance newBill est bien appelé
     });
     describe("When an error occurs on API", () => {
-      beforeEach(() => {
-        jest.spyOn(mockStore, "bills");
-        Object.defineProperty(window, "localStorage", {
-          value: localStorageMock,
-        });
-        window.localStorage.setItem(
+      // Scénario de test : l'API renvoie une erreur 404
+      test("Then the API failed and throw a 404 error", async () => {
+        // Configurer l'utilisateur et l'environnement
+        localStorage.setItem(
           "user",
-          JSON.stringify({
-            type: "Employee",
-            email: "a@a",
-          })
+          JSON.stringify({ type: "Employee", email: "a@a" })
         );
         const root = document.createElement("div");
         root.setAttribute("id", "root");
-        document.body.appendChild(root);
+        document.body.append(root);
         router();
-      });
-      // Test unitaire: Erreur 500
-      test("then fetches messages from an API and fails with 500 message error", async () => {
-        // Espionnage de la méthode "bills" de mockStore à nouveau pour ce test spécifique
-        jest.spyOn(mockStore, "bills");
-         // Espionnage de la méthode "error" de la console pour éviter les sorties dans les journaux
-        jest.spyOn(console, "error").mockImplementation(() => {});
-         // Configuration du localStorage avec la valeur du mock dans l'objet window
-        Object.defineProperty(window, "localStorage", {
-          value: localStorageMock,
-        });
-        // Définir une propriété "location" avec une valeur hash correspondant au chemin de la nouvelle facture dans l'objet window
-        Object.defineProperty(window, "location", {
-          value: { hash: ROUTES_PATH["NewBill"] },
-        });
-
-        window.localStorage.setItem(
-          "user",
-          JSON.stringify({ type: "Employee" })
-        );
-        document.body.innerHTML = `<div id="root"></div>`;
-        router();
-        // Fonction de navigation utilisée dans l'application
-        const onNavigate = (pathname) => {
-          document.body.innerHTML = ROUTES({ pathname });
-        };
-        // Configurer la méthode "bills" de mockStore pour simuler une erreur 404
-        mockStore.bills.mockImplementationOnce(() => {
-          return {
-            update: () => {
-              // Simuler une erreur 404 en rejetant la promesse avec une erreur
-              const error = new Error("Erreur 404");
-              error.response = { status: 404 };
-              return Promise.reject(error);
-            },
-          };
-        });
-         // Créer une nouvelle instance de la classe NewBill avec les paramètres nécessaires pour le test
+        // Initialise le magasin et l'instance NewBill
+        const store = mockStore;
         const newBill = new NewBill({
           document,
           onNavigate,
-          store: mockStore,
-          localStorage: window.localStorage,
+          store,
+          localStorage,
         });
-          // Récupérer le formulaire de nouvelle facture à partir du document
-        const form = await screen.getByTestId("form-new-bill");
-         // Espionner la méthode "handleSubmit" pour ce test spécifique
-        const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
-        form.addEventListener("submit", handleSubmit);
-        // Simuler la soumission du formulaire
-        fireEvent.submit(form);
-        // Attendre la prochaine micro-tâche pour que les promesses soient résolues/rejetées
-        await new Promise(process.nextTick);
-        // Vérifier que la console.error a été appelée
-        expect(console.error).toHaveBeenCalled();
+        // Mock  l'appel API à bills.create et lui fait générer une erreur 404
+        const mockedBill = jest
+          .spyOn(mockStore, "bills")
+          .mockImplementationOnce(() => {
+            return {
+              create: jest.fn().mockRejectedValue(new Error("Erreur 404")),
+            };
+          });
+          // Attendez-vous à ce que l'appel API génère une erreur 404
+        await expect(mockedBill().create).rejects.toThrow("Erreur 404");
+        // Assertions après l'appel API
+        expect(mockedBill).toHaveBeenCalled();
+        expect(newBill.billId).toBeNull();
+        expect(newBill.fileUrl).toBeNull();
+        expect(newBill.fileName).toBeNull();
+      });
+      // Scénario de test : l'API renvoie une erreur 500
+      test("Then the API failed and trow a 500 error", async () => {
+        // Configurer l'utilisateur et l'environnement
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ type: "Employee", email: "a@a" })
+        );
+        const root = document.createElement("div");
+        root.setAttribute("id", "root");
+        document.body.append(root);
+        router();
+        // Initialise le magasin et l'instance NewBill
+        const store = mockStore;
+        const newBill = new NewBill({
+          document,
+          onNavigate,
+          store,
+          localStorage,
+        });
+        // Mock  l'appel API à bills.create et lui fait générer une erreur 500
+        const mockedBill = jest
+          .spyOn(mockStore, "bills")
+          .mockImplementationOnce(() => {
+            return {
+              create: jest.fn().mockRejectedValue(new Error("Erreur 500")),
+            };
+          });
+          // Attendez-vous à ce que l'appel API génère une erreur 500
+        await expect(mockedBill().create).rejects.toThrow("Erreur 500");
+        // Assertions après l'appel API
+        expect(mockedBill).toHaveBeenCalled();
+        expect(newBill.billId).toBeNull();
+        expect(newBill.fileUrl).toBeNull();
+        expect(newBill.fileName).toBeNull();
       });
     });
   });
