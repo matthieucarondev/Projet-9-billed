@@ -112,78 +112,56 @@ describe("Given I am connected as an employee", () => {
   //Test pour vérifier l'ajout d'un fichier avec la bonne extension
   describe("When A file with a correct format is upload", () => {
     test("Then verify the file bill", async () => {
-      jest.spyOn(mockStore, "bills");
-
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
-
-      Object.defineProperty(window, "localStorage", {
-        value: localStorageMock,
-      });
-      Object.defineProperty(window, "location", {
-        value: { hash: ROUTES_PATH["NewBill"] },
-      });
-      window.localStorage.setItem(
-        "user",
-        JSON.stringify({
-          type: "Employee",
-        })
-      );
-
-      const html = NewBillUI();
-      document.body.innerHTML = html;
-
-      const newBillInit = new NewBill({
+      const newBill = new NewBill({
         document,
         onNavigate,
-        store: mockStore,
         localStorage: window.localStorage,
+        store: mockStore,
       });
-
-      const file = new File(["image"], "image.png", { type: "image/png" });
-      const handleChangeFile = jest.fn((e) => newBillInit.handleChangeFile(e));
-
-      const billFile = screen.getByTestId("file");
-
-      billFile.addEventListener("change", handleChangeFile);
-      userEvent.upload(billFile, file);
-
-      expect(billFile.files[0].name).toBeDefined();
-      expect(handleChangeFile).toHaveBeenCalled();
+      // Récuperation des éléments à test
+      const errorMessage = screen.getByTestId("error-msg");
+      const fileUp = screen.getByTestId("file");
+      // Simulation de la fonction "handleChangeFil"
+      const handleChangeFile = jest.fn((e) => newBill.handleChangeFile(e));
+      // Création d'un file test.png pour le test de compatibilité
+      const file = new File(["test"], "test.png", { type: "image/png" });
+      // Fonction testé
+      fileUp.addEventListener("change", handleChangeFile);
+      fireEvent.change(fileUp, { target: { files: [file] } }); //Simulation de l'input fileUp avec le file de test
+      // Test
+      expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
+      expect(fileUp.files[0]).toStrictEqual(file); //le fichier est bien le meme que file (test.png)
     });
   });
 
   // Test pour vérifier que le message d'alerte est bien affiché dans le cas d'un fichier invalide
   describe("When A file with an incorrect format", () => {
     test("Then the file input value display no name with an error message ", () => {
-      document.body.innerHTML = NewBillUI();
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname });
       };
-
-      const store = mockStore;
       const newBill = new NewBill({
         document,
         onNavigate,
-        store,
-        localStorage,
+        localStorage: window.localStorage,
+        store: mockStore,
       });
-      const alertWindows = jest.spyOn(window, "alert").mockImplementation();
-      const fileInput = screen.getByTestId("file");
-      const handleChangeFile = jest.fn((e) => newBill.handleChangeFile(e));
-      fileInput.addEventListener("change", handleChangeFile);
+      // Récuperation des éléments à test
+      const errorMessage = screen.getByTestId("error-msg");
+      const fileUp = screen.getByTestId("file");
+      const handleChangeFile = jest.fn(newBill.handleChangeFile);
+      // Création d'un file test.pdf pour le test de incompatibilité
+      const file = new File(["test"], "test.pdf", { type: "image/pdf" });
+      fileUp.addEventListener("change", (e) => handleChangeFile(e));
+      fireEvent.change(fileUp, { target: { files: [file] } });
 
-      const fileTest = new File(["test"], "test.pdf", {
-        type: "application/pdf",
-      });
-      userEvent.upload(fileInput, fileTest);
-
-      expect(alertWindows).toHaveBeenCalled();
-      expect(fileInput.value).toBe("");
-    });
+      expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
+      expect(errorMessage.classList.contains("visible")).toBeTruthy(); //le message d'erreur est visible
   });
-
+  });
   // Test intégration: Post Bill
 
   describe("When I validate the form New Bill", () => {
