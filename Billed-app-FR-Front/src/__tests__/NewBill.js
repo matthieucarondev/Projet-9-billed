@@ -3,7 +3,7 @@ import { fireEvent, screen } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
-
+import Logout from "../containers/Logout.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store.js";
 
@@ -11,6 +11,7 @@ import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import router from "../app/Router.js";
 
 jest.mock("../app/store", () => mockStore);
+jest.mock("./Logout.js");
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
@@ -29,6 +30,8 @@ describe("Given I am connected as an employee", () => {
       document.body.append(root);
       router();
       window.onNavigate(ROUTES_PATH.NewBill);
+    
+  
     });
     // Test unitaire: icon-mail
     test("Then the invoice icon in the vertical layout should be highlighted and the window icon should not be highlighted.", async () => {
