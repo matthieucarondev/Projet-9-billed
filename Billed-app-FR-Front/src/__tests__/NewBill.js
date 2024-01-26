@@ -11,7 +11,6 @@ import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import router from "../app/Router.js";
 
 jest.mock("../app/store", () => mockStore);
-jest.mock("./Logout.js");
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
