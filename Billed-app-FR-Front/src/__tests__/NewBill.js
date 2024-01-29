@@ -6,6 +6,8 @@ import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store.js";
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import router from "../app/Router.js";
+import Logout from "../containers/Logout.js";
+import userEvent from '@testing-library/user-event'
 
 jest.mock("../app/store", () => mockStore);
 
@@ -123,7 +125,7 @@ describe("Given I am connected as an employee", () => {
         store: mockStore,
       });
       // Récuperation des éléments à test
-      const errorMessage = screen.getByTestId("error-msg");
+      
       const fileUp = screen.getByTestId("file");
       // Simulation de la fonction "handleChangeFil"
       const handleChangeFile = jest.fn((e) => newBill.handleChangeFile(e));
@@ -163,6 +165,26 @@ describe("Given I am connected as an employee", () => {
       expect(errorMessage.classList.contains("visible")).toBeTruthy(); //le message d'erreur est visible
   });
   });
+  describe('When I click on disconnect button', () => {
+    test(('Then, I should be sent to login page'), () => {
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem('user', JSON.stringify({
+        type: "Employee"
+      }))
+      document.body.innerHTML = NewBillUI();
+      const logout = new Logout({ document, onNavigate, localStorage })
+      const handleClick = jest.fn(logout.handleClick)
+
+      const disco = screen.getByTestId('layout-disconnect')
+      disco.addEventListener('click', handleClick)
+      userEvent.click(disco)
+      expect(handleClick).toHaveBeenCalled()
+      
+    })
+  })
   // Test intégration: Post Bill
 
   describe("When I validate the form New Bill", () => {
