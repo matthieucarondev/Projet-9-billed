@@ -1,12 +1,9 @@
 import "@testing-library/jest-dom";
 import { fireEvent, screen } from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
-import Logout from "../containers/Logout.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store.js";
-
 import { ROUTES, ROUTES_PATH } from "../constants/routes.js";
 import router from "../app/Router.js";
 
@@ -32,7 +29,8 @@ describe("Given I am connected as an employee", () => {
     
   
     });
-    // Test unitaire: icon-mail
+ 
+    // Test unitaire: icon-mail icon-window
     test("Then the invoice icon in the vertical layout should be highlighted and the window icon should not be highlighted.", async () => {
       await screen.findByTestId("icon-window");
       const windowIcon = screen.getByTestId("icon-window");
@@ -104,6 +102,7 @@ describe("Given I am connected as an employee", () => {
 
       expect(screen.getByText("Envoyer une note de frais")).toBeTruthy();
     });
+    
     test("Then a form should be display", async () => {
       document.body.innerHTML = NewBillUI();
       const form = document.querySelector("form");

@@ -31,7 +31,6 @@ export default class NewBill {
       this.document.querySelector(".error-msg").classList.remove("visible")
     } else {
       this.document.querySelector(".error-msg").classList.add("visible")
-      alert("Type de fichier invalide , Veuillez sélectionner un fichier au format JPEG ou PNG.");
       fileInput.value = ''
       return
     }
