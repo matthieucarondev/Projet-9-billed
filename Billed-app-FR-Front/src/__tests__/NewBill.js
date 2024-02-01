@@ -125,7 +125,7 @@ describe("Given I am connected as an employee", () => {
         store: mockStore,
       });
       // Récuperation des éléments à test
-      
+     
       const fileUp = screen.getByTestId("file");
       // Simulation de la fonction "handleChangeFil"
       const handleChangeFile = jest.fn((e) => newBill.handleChangeFile(e));
@@ -137,6 +137,8 @@ describe("Given I am connected as an employee", () => {
       // Test
       expect(handleChangeFile).toHaveBeenCalled(); //fonction est bien appelé
       expect(fileUp.files[0]).toStrictEqual(file); //le fichier est bien le meme que file (test.png)
+       // Vérifiez que la classe "visible" a été retirée de l'élément avec la classe "error-msg"
+    expect(document.querySelector('.error-msg').classList.contains('visible')).toBe(true);
     });
   });
 
